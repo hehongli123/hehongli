@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全国地摊经济城市空间分布</title>
+    <!-- 4.28 版本 CSS -->
+    <link rel="stylesheet" href="https://js.arcgis.com/4.28/esri/themes/light/main.css">
+    <!-- 4.28 版本 JS -->
+    <script src="https://js.arcgis.com/4.28/"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+
+        /* 1. 页眉区域 */
+        .header {
+            height: 60px;
+            background: linear-gradient(90deg, #005A9C, #004466);
+            color: white;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            font-size: 22px;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* 主容器：地图 + 底图库 */
+        .main-container {
+            display: flex;
+            height: calc(100vh - 60px);
+        }
+
+        /* 2. 地图区域（核心） */
+        #viewDiv {
+            flex: 1;
+            position: relative;
+        }
+
+        /* 3. 底图库区域 */
+        .basemap-gallery {
+            width: 260px;
+            background: #f5f7fa;
+            border-left: 1px solid #ddd;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .basemap-gallery h3 {
+            color: #333;
+            margin-bottom: 12px;
+            font-size: 16px;
+            border-left: 4px solid #005A9C;
+            padding-left: 8px;
+        }
+
+        .basemap-item {
+            padding: 8px 12px;
+            margin: 6px 0;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #eee;
+        }
+
+        .basemap-item:hover {
+            background: #e8f3ff;
+            border-color: #005A9C;
+        }
+    </style>
+</head>
+<body>
+    <!-- 页眉 -->
+    <div class="header">全国地摊经济城市空间分布地图</div>
+
+    <!-- 地图 + 底图库 -->
+    <div class="main-container">
+        <div id="viewDiv"></div>
+
+        <!-- 底图库区域 -->
+        <div class="basemap-gallery">
+            <h3>底图切换</h3>
+            <div class="basemap-item" data-basemap="streets">街道地图</div>
+            <div class="basemap-item" data-basemap="satellite">卫星影像</div>
+            <div class="basemap-item" data-basemap="topographic">地形地图</div>
+            <div class="basemap-item" data-basemap="gray">灰色底图</div>
+            <div class="basemap-item" data-basemap="osm">开源地图</div>
+        </div>
+    </div>
+
+    <script>
+        require([
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/layers/FeatureLayer",
+            "esri/widgets/Search",
+            "esri/widgets/Legend",
+            "esri/widgets/ScaleBar",
+            "esri/widgets/LayerList"
+        ], function(Map, MapView, FeatureLayer, Search, Legend, ScaleBar, LayerList) {
+
+            // 1. 创建地图
+            const map = new Map({
+                basemap: "streets"
+            });
+
+            // 2. 创建视图
+            const view = new MapView({
+                container: "viewDiv",
+                map: map,
+                center: [105, 34], // 全国居中
+                zoom: 4
+            });
+
+            // 加载你提供的 GeoScene Online 图层
+            const streetEconomyLayer = new FeatureLayer({
+                url: "https://www.geosceneonline.cn/server/rest/services/Hosted/全国开展“地摊经济”的城市空间分布/FeatureServer/0",
+                title: "地摊经济城市分布"
+            });
+            map.add(streetEconomyLayer);
+
+            // ===================== 必选微件 =====================
+            // 1. 搜索框
+            const search = new Search({
+                view: view
+            });
+            view.ui.add(search, "top-left");
+
+            // 2. 图例
+            const legend = new Legend({
+                view: view
+            });
+            view.ui.add(legend, "bottom-left");
+
+            // 3. 比例尺
+            const scaleBar = new ScaleBar({
+                view: view,
+                unit: "metric"
+            });
+            view.ui.add(scaleBar, "bottom-left");
+
+            // 4. 图层列表
+            const layerList = new LayerList({
+                view: view
+            });
+            view.ui.add(layerList, "top-right");
+
+            // 底图切换
+            document.querySelectorAll(".basemap-item").forEach(item => {
+                item.addEventListener("click", () => {
+                    const basemap = item.getAttribute("data-basemap");
+                    map.basemap = basemap;
+                });
+            });
+        });
+    </script>
+</body>
+</html>
